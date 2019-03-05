@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+
+    <settings>
+        <!--指定使用Log4j进行日志输出-->
+        <setting name="logImpl" value="LOG4J"/>
+
+        <!--全局属性 mapUnderscoreToCamelCase自动将数据库中下划线的列名与javaBean中的驼峰式属性名相匹配
+        不需要在XML通过resultMap或者设置列别名的方式进行相匹配 直接使用resultType即可-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+
+        <!--延迟加载按需进行-->
+        <setting name="aggressiveLazyLoading" value="false"/>
+
+        <!--开启二级缓存 默认为true-->
+        <setting name="cacheEnabled" value="true"/>
+        
+
+    </settings>
+
+
+    <!--包的别名-->
+    <typeAliases>
+        <package name="MybatisExc.entity"/>
+    </typeAliases>
+
+
+    <!--配置类型处理器 放在typeAliases标签后面进行配置-->
+    <typeHandlers>
+        <typeHandler handler="MybatisExc.Enum.EnumTypeHandler.StatusTypeHandler"
+                     javaType="MybatisExc.Enum.Status"/>
+    </typeHandlers>
+
+    <!--配置数据库的连接-->
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC">
+                <property name="" value=""/>
+            </transactionManager>
+            <dataSource type="UNPOOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/mybatis"/>
+                <property name="username" value="root"/>
+                <property name="password" value="123456"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+
+
+    <!--SQL语句和映射配置文件-->
+    <mappers>
+        <package name="MybatisExc.mapper"/>
+    </mappers>
+
+
+
+
+</configuration>

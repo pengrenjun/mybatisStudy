@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="MybatisExc.mapper.RoleMapper">
+
+    <!--采用Ehcache缓存框架-->
+    <cache type="org.mybatis.caches.ehcache.EhcacheCache"/>
+
+    <resultMap id="RoleMap" type="MybatisExc.entity.SysRole">
+        <id property="id" column="id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!--嵌套结果映射-->
+    <resultMap id="RoleAndPriviligeMap" type="MybatisExc.entity.SysRole" >
+        <id property="id" column="roleId"/>
+        <result property="roleName" column="role_name"/>
+       <!-- &lt;!&ndash;将创建信息单独合为一个bean&ndash;&gt;
+        <association property="createInfo">-->
+            <result property="createBy" column="create_by"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+     <!--  </association>-->
+        <collection property="privilegeList" ofType="MybatisExc.entity.SysPrivilege">
+            <id property="id" column="prgId"/>
+            <result property="privilegeName" column="privilege_name"/>
+            <result property="privilegeUrl" column="privilege_url"/>
+        </collection>
+    </resultMap>
+
+    <!--嵌套结果查询-->
+    <resultMap id="RoleAndPriviligeMapB" type="MybatisExc.entity.SysRole" extends="RoleMap">
+
+        <collection property="privilegeList" fetchType="lazy" column="{roleId=id}"
+                    select="MybatisExc.mapper.PrivilegeMapper.getsysPrivilegeListByRoleId"
+        />
+    </resultMap>
+
+    <!--
+     * 根据用户id查询有的角色信息,同时嵌套查询角色对应的权限信息
+     *-->
+    <select id="getSysRoleListByUserId" resultMap="RoleAndPriviligeMapB">
+         SELECT a.* from sys_role a
+         INNER JOIN sys_user_role  b ON a.id=b.role_id
+         where b.user_id=#{userId}
+    </select>
+
+
+
+</mapper>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="MybatisExc.mapper.PrivilegeMapper">
+
+
+    <!--配置二级缓存 LRU最近最少使用的(默认方式) 采用先进先出的缓存方式  60s刷新一次 存储集合或者对象1024个(最大值) 缓存读取的数据只读-->
+    <cache eviction="FIFO" flushInterval="60000" size="1024" readOnly="false"/>
+
+
+
+    <resultMap id="privilegeMap" type="MybatisExc.entity.SysPrivilege">
+        <id property="id" column="id"/>
+        <result property="privilegeName"  column="privilege_name"/>
+        <result property="privilegeUrl"   column="privilege_url"/>
+    </resultMap>
+
+
+
+    <select id="getsysPrivilegeListByRoleId" resultMap="privilegeMap">
+        SELECT a.* FROM sys_privilege a
+        INNER JOIN sys_role_privilege b ON a.id=b.privilege_id
+        WHERE b.role_id=#{roleId}
+    </select>
+
+
+</mapper>

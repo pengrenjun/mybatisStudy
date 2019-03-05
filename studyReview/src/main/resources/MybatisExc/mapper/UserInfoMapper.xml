@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="MybatisExc.mapper.UserInfoMapper">
+
+    <resultMap id="UserInfoMap" type="MybatisExc.entity.SysUserInfo">
+        <id property="id" column="id"/>
+        <result property="user_id" column="user_id"/>
+        <result property="location" column="location"/>
+        <result property="phone" column="phone"/>
+        <result property="work" column="work"/>
+
+    </resultMap>
+
+
+    <select id="getSysUserInfoById" resultMap="UserInfoMap">
+        SELECT * from user_info
+        where id=#{id}
+    </select>
+
+</mapper>

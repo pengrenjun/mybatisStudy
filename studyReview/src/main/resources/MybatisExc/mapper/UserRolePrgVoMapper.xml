@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="MybatisExc.mapper.UserRolePrgVoMapper">
+
+    <resultMap id="userRolePrgVoMap" type="MybatisExc.sysvo.UserRolePrgVo">
+        <id property="id" column="id"/>
+        <result property="userName" column="user_name"/>
+        <result property="userPassword" column="user_password"/>
+        <result property="userEmail" column="user_email"/>
+        <result property="userInfo" column="user_info"/>
+        <result property="headImg" column="head_img" jdbcType="BLOB"/>
+        <result property="createTime" column="create_time" jdbcType="DATE"/>
+        <result property="status" column="status"/>
+
+        <collection property="roleVoList"  resultMap="sysRoleVoMap"/>
+
+    </resultMap>
+
+    <resultMap id="sysRoleVoMap" type="MybatisExc.sysvo.SysRoleVo">
+        <id property="id" column="role_id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="enabled" column="enabled"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+
+        <collection property="privilegeVoList" resultMap="sysPrgVoMap"/>
+
+    </resultMap>
+
+    <resultMap id="sysPrgVoMap" type="MybatisExc.sysvo.SysPrivilegeVo">
+        <id property="id" column="prg_id"/>
+        <result property="privilegeName" column="privilege_name"/>
+        <result property="privilegeUrl" column="privilege_url"/>
+    </resultMap>
+
+
+
+
+
+    <select id="SysPrivilegeVoList" resultMap="userRolePrgVoMap">
+        SELECT * FROM  user_role_prg_v
+    </select>
+
+</mapper>
+
+
+

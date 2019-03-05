@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--namespace作为全名配置-->
+<mapper namespace="MybatisExc.mapper.UserMapper">
+
+
+
+    <resultMap id="UserMap" type="MybatisExc.entity.SysUser">
+        <id property="id" column="id"/>
+        <result property="userName" column="user_name"/>
+        <result property="userPassword" column="user_password"/>
+        <result property="userEmail" column="user_email"/>
+        <result property="userInfo" column="user_info"/>
+        <result property="headImg" column="head_img" jdbcType="BLOB"/>
+        <result property="createTime" column="create_time" jdbcType="DATE"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <resultMap id="UserInfoMap" type="SysUser" extends="UserMap">
+        <result property="sysUserInfo.id" column="id"/>
+        <result property="sysUserInfo.user_id" column="user_id"/>
+        <result property="sysUserInfo.location" column="location"/>
+        <result property="sysUserInfo.phone" column="phone"/>
+        <result property="sysUserInfo.work" column="work"/>
+    </resultMap>
+
+    <resultMap id="UserBInfoMap" type="SysUser" extends="UserMap">
+        <association property="sysUserInfo" javaType="SysUserInfo" resultMap="MybatisExc.mapper.UserInfoMapper.UserInfoMap"/>
+    </resultMap>
+
+    <!--同时进行配置才起到按需加载的需求 <setting name="aggressiveLazyLoading" value="false"/> fetchType="lazy"-->
+    <resultMap id="UserCInfoMap" type="SysUser" extends="UserMap">
+        <association property="sysUserInfo" javaType="SysUserInfo" fetchType="lazy"
+                     select="MybatisExc.mapper.UserInfoMapper.getSysUserInfoById" column="{id=user_info_pkId}"/>
+    </resultMap>
+
+   <!-- <resultMap id="UserAndRoleListMap" type="SysUser" extends="UserMap">
+        <collection property="roleList" ofType="MybatisExc.entity.SysRole">
+            <result property="id" column="id"/>
+            <result property="roleName" column="role_name"/>
+           &lt;!&ndash; <result property="enabled" column="enabled"/>&ndash;&gt;
+            <result property="createBy" column="create_by"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        </collection>
+    </resultMap>-->
+
+    <resultMap id="UserAndRoleListMap" type="SysUser" extends="UserMap">
+        <collection property="roleList" resultMap="MybatisExc.mapper.RoleMapper.RoleMap">
+        </collection>
+    </resultMap>
+
+    <resultMap id="SysuserInfoAndRoleAndSysPrivilegeMap" type="SysUser" extends="UserMap">
+        <collection property="roleList" resultMap="MybatisExc.mapper.RoleMapper.RoleAndPriviligeMap">
+        </collection>
+    </resultMap>
+
+    <!--通过用户id查询用户的基本信息及其所具有的所用角色信息,权限信息(嵌套结果查询方式)-->
+    <resultMap id="SysuserInfoAndRoleAndSysPrivilegeMapB" type="SysUser" extends="UserMap">
+        <collection property="roleList" fetchType="lazy" column="{userId=id}"
+          select="MybatisExc.mapper.RoleMapper.getSysRoleListByUserId"
+        />
+    </resultMap>
+
+    <select id="getSysUserById"  resultMap="UserMap">
+       select t.* from sys_user t where t.id=#{id}
+    </select>
+
+    <select id="getAllsysUserList" resultType="SysUser">
+        SELECT * from sys_user
+    </select>
+
+    <select id="getSysuserInfoAndRolelistInfo" resultMap="UserAndRoleListMap">
+        SELECT
+	     a.*,c.id,c.role_name,c.create_by,c.create_time
+        FROM
+	    sys_user a
+        INNER JOIN sys_user_role b ON a.id = b.user_id
+        INNER JOIN sys_role c ON b.role_id = c.id
+        WHERE a.id=#{id}
+    </select>
+
+    <select id="getSysUserInfoById" resultMap="UserInfoMap">
+        SELECT
+        u.*,a.*
+        from sys_user u
+        INNER JOIN
+        user_info a
+        ON
+        u.id=a.user_id
+        where a.id=#{id}
+    </select>
+
+    <select id="getSysUserInfoByIdAssociation" resultMap="UserBInfoMap">
+        SELECT
+        u.*,a.*
+        from sys_user u
+        INNER JOIN
+        user_info a
+        ON
+        u.id=a.user_id
+        where a.id=#{id}
+    </select>
+
+    <select id="getSysUserInfoByIdAssocaion_Select" resultMap="UserCInfoMap">
+        SELECT
+        u.*,a.id user_info_pkId
+        from sys_user u
+        INNER JOIN
+        user_info a
+        ON
+        u.id=a.user_id
+        where a.id=#{id}
+    </select>
+
+    <!--BLOB对应二进制数据流-->
+   <!-- Mysql数据库插入时不需指定id,Mysql会自动生成;但在Oracle数据库中要指定id 因为在执行selectKey之后就生成了id 这个id要插入到数据库中
+    返回自增主键 Mysql自增主键-->
+    <insert id="insertNewSysUser">
+      INSERT  INTO  sys_user(user_name,user_password,user_email,user_info,head_img,create_time,status)
+      VALUE (#{userName},#{userPassword},#{userEmail},#{userInfo},#{headImg,jdbcType=BLOB},#{createTime,jdbcType=TIMESTAMP},#{status})
+      <selectKey keyProperty="id" keyColumn="id" resultType="long" order="AFTER">
+        SELECT LAST_INSERT_ID();
+      </selectKey>
+    </insert>
+
+
+    <select id="getSysUserByUserCondition" resultMap="UserCInfoMap">
+        SELECT
+        u.*,a.id user_info_pkId
+        from sys_user u
+        INNER JOIN
+        user_info a
+        ON
+        u.id=a.user_id
+        where 1=1
+        <if test="userName!=null and userName!=''">
+          and u.user_name LIKE concat('%', #{userName}, '%')
+        </if>
+
+        <if test="userPassword!=null and userPassword!=''">
+            and u.user_password LIKE concat('%', #{userPassword}, '%')
+        </if>
+
+        <if test="id!=null and id!=''">
+            and u.id LIKE concat('%', #{id}, '%')
+        </if>
+    </select>
+
+
+    <select id="getSysusersByIds" resultMap="UserCInfoMap">
+        SELECT
+        u.*,a.id user_info_pkId
+        from sys_user u
+        INNER JOIN
+        user_info a
+        ON
+        u.id=a.user_id
+        where u.id IN
+        <foreach collection="ids" open="("  close=")" separator="," item="id" index="i">
+            #{id}
+        </foreach>
+
+    </select>
+
+
+    <insert id="insertSysUsersList" >
+        INSERT INTO sys_user (user_name,user_password,user_email,user_info,head_img,create_time)
+        VALUES
+        <foreach collection="sysUserList" item="user" separator=",">
+            (
+            #{user.userName},#{user.userPassword},#{user.userEmail},#{user.userInfo},#{user.headImg,jdbcType=BLOB},#{user.createTime,jdbcType=DATE})
+        </foreach>
+    </insert>
+
+    <update id="updateSysUserList">
+        UPDATE sys_user t SET
+        <foreach collection="userMap" item="val" index="key" separator=",">
+           ${key}=#{val}
+        </foreach>
+        WHERE
+        t.id=#{id}
+    </update>
+
+    <select id="getSysuserInfoAndRoleAndSysPrivilegelistInfo" resultMap="SysuserInfoAndRoleAndSysPrivilegeMap">
+      SELECT
+        a.*,c.id roleId,c.role_name,c.create_by,c.create_time,e.id prgId,e.privilege_name,e.privilege_url
+      FROM
+	    sys_user a
+      INNER JOIN sys_user_role b ON a.id = b.user_id
+      INNER JOIN sys_role c on c.id=b.role_id
+      INNER JOIN sys_role_privilege d ON c.id = d.role_id
+      INNER JOIN sys_privilege e ON d.privilege_id = e.id
+      WHERE a.id=#{id}
+    </select>
+
+    <select id="getSysuserRolePrgBySelect" resultMap="SysuserInfoAndRoleAndSysPrivilegeMapB">
+        SELECT a.* FROM  sys_user a
+        where a.id=#{id}
+    </select>
+</mapper>
